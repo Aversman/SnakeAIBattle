@@ -1,0 +1,252 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap');
+
+@font-face {
+  font-family: '04b';
+  src: url('/assets/fonts/04b_30.TTF');
+}
+
+@font-face {
+  font-family: 'vcr';
+  src: url('/assets/fonts/vcr.ttf');
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: rgb(91,139,143);
+  background: linear-gradient(90deg, rgb(126, 169, 173) 0%, rgb(145, 204, 210) 50%, rgb(172, 228, 233) 100%);
+}
+
+.connect_loader {
+  visibility: visible;
+  opacity: 1;
+  width: 100%;
+  height: 100%;
+  transition: all .7s;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,.7);
+  z-index: 9999999;
+}
+
+.content_loader-content {
+  position: relative;
+  text-align: center;
+}
+
+.content_loader-content h1 {
+  margin-top: 20px;
+  text-transform: uppercase;
+  font-family: 'vcr', 'Roboto', sans-serif;
+  color: #fff;
+}
+
+.preview {
+  visibility: hidden;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  transition: all .7s;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #91ebd6;
+  background-image: linear-gradient(45deg, #91ebd6 0%, #6daac8 50%, #3f9d9b 100%);  
+  z-index: 999;
+}
+
+.preview-content {
+  text-align: center;
+}
+
+.preview-content h1 {
+  font-size: 5em;
+  text-transform: uppercase;
+  font-family: '04b', 'Roboto', sans-serif;
+  color: rgb(74, 129, 127);
+  text-shadow: 0px 3px 3px rgb(255, 255, 255);
+  user-select: none;
+  cursor: default;
+  pointer-events: none;
+}
+
+.preview-buttons {
+  margin-top: 20px;
+}
+
+.preview-buttons button {
+  position: relative;
+  padding: 18px;
+  border: none;
+  margin: 10px;
+  font-size: 25px;
+  text-transform: uppercase;
+  font-family: 'vcr', sans-serif;
+  outline: none;
+  background-color: #4a817f;
+  color: #fff;
+  cursor: pointer;
+}
+
+.preview-buttons button:hover {
+  background-color: #65a3a1;
+}
+
+.preview-buttons button::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 7px;
+  left: 7px;
+  background-color: #3c6867;
+  z-index: -1;
+}
+
+.preview-buttons button:active,
+.preview-buttons button:focus {
+  position: relative;
+  top: 7px;
+}
+
+.game {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.game-content {
+  width: 100%;
+  height: max-content;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.game-toolbar {
+  width: 100%;
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.game-toolbar h4 {
+  display: flex;
+  align-items: center;
+  margin: 0 10px;
+  font-size: 1.5em;
+  font-family: 'vcr', 'Roboto', sans-serif;
+  font-weight: normal;
+  color: #fff;
+}
+
+.game-toolbar h4 span:last-child {
+  margin-left: 10px;
+}
+
+.game-toolbar img {
+  width: 24px;
+  height: 24px;
+}
+
+.game-toolbar-snake-icon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  font-size: 14px;
+  justify-content: center;
+  align-items: center;
+}
+
+#game-toolbar-snake1-icon {
+  background-color: #314647;
+}
+
+#game-toolbar-snake2-icon {
+  background-color: #473131;
+}
+
+.game-toolbar-btn {
+  cursor: pointer;
+  border: none;
+  outline: none;
+  padding: 6px 12px;
+  margin: 0 4px;
+  color: #fff;
+  font-family: 'vcr', 'Roboto', sans-serif;
+  box-shadow: 3px 3px 0 #444;
+  background-color: #314647;
+}
+
+.game-toolbar-btn:hover {
+  background-color: #3c6867;
+}
+
+#game-grid {
+  position: absolute;
+  display: grid;
+  z-index: -1;
+}
+
+#game-grid div {
+  transition: all .3s;
+}
+
+#game-grid div:nth-child(odd) {
+  background-color: #EFF5F5;
+}
+
+#game-grid div:nth-child(even) {
+  background-color: #D6E4E5;
+}
+
+#canvas {
+  background-color: transparent;
+  box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+}
+
+
+/* loader styles */
+.loader {
+  width: 52px;
+  height: 52px;
+  border: 9px solid #91ebd6;
+  background-color: #91ebd6;
+  border-radius: 0;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1.5s linear infinite;
+  }
+
+  @keyframes rotation {
+  0% {
+      transform: rotate(0deg);
+  }
+  100% {
+      transform: rotate(360deg);
+  }
+  } 

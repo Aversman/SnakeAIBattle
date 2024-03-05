@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SNAKE BATTLE 2D</title>
+  <link rel="shortcut icon" href="/assets/img/favicon.png" type="image/x-icon">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+</head>
+<body>
+  <div class="connect_loader">
+    <div class="content_loader-content">
+      <span class="loader"></span>
+      <h1>Connecting to the server</h1>
+    </div>
+  </div>
+  <div class="preview">
+    <div class="preview-content">
+      <h1>Snake Battle 2D</h1>
+      <div class="preview-buttons">
+        <button type="submit" id="play-ai">AI Self-Play</button>
+      </div>
+    </div>
+  </div>
+  <div class="game">
+    <div class="game-toolbar">
+      <button type="button" class="game-toolbar-btn" id="play-btn">Play</button>
+      <button type="button" class="game-toolbar-btn" id="new_game-btn">New Game</button>
+      <h4 class="game-toolbar-score"><span class="game-toolbar-score-icon"><img src="/assets/img/apple.png" alt=""></span> <span id="game-toolbar-score-counter">0</span></h4>
+      <h4 class="game-toolbar-snake-score"><span class="game-toolbar-snake-icon" id="game-toolbar-snake1-icon">1</span> <span id="snake1-score-counter">0</span></h4>
+      <h4 class="game-toolbar-snake-score"><span class="game-toolbar-snake-icon" id="game-toolbar-snake2-icon">2</span> <span id="snake2-score-counter">0</span></h4>
+    </div>
+    <div class="game-content">
+      <div id="game-grid"></div>
+      <canvas id="canvas" width="1300" height="700"></canvas>
+    </div>
+  </div>
+  <!-- Socket IO сделать доступным локально -->
+  <script src="/assets/js/socket.io.min.js"></script>
+  <script src="/assets/js/Game.js"></script>
+  <script src="/assets/js/main.js"></script>
+</body>
+</html>
