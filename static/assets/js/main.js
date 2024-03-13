@@ -11,7 +11,7 @@ let game = new Game()
 const socket = io()
 
 // ms
-const gameIterationDelay = 100
+const gameIterationDelay = 50
 
 socket.on("connect", () => {
   console.log('WS Connected')

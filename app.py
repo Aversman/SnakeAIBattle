@@ -2,6 +2,7 @@ from flask import Flask, render_template
 from flask_socketio import SocketIO, send, emit
 
 # $ flask --app app.py --debug run
+# /.venv/Scripts~ $ ./flask --app ../../app.py --debug run
 
 app = Flask(__name__, static_folder='static/assets', template_folder='static/pages')
 socketio = SocketIO(app)
