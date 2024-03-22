@@ -10,9 +10,7 @@ let game = new Game()
 
 const socket = io()
 
-// ms
-const gameIterationDelay = 50
-
+// SocketIO events
 socket.on("connect", () => {
   console.log('WS Connected')
   connectionLoaderElem.style.visibility = 'hidden'
@@ -26,15 +24,23 @@ socket.on("disconnect", () => {
 })
 
 // game iteration
-socket.on('ai_output_data', function(response) {
-  setTimeout(() => {
-    if (!game.isGameOver) {
-      const inputAIData = game.gameStep(game.snake1.getSnakeDirection(response.snake1), game.snake2.getSnakeDirection(response.snake2))
-      socket.emit('ai_input_data', inputAIData)
-    }
-  }, gameIterationDelay)
+socket.on('play_step', function(response) {
+  const state = response[0]
+  const direction = response[1]
+  const reward = game.gameStep(game.snake1.getSnakeDirection(direction.snake1), game.snake2.getSnakeDirection(direction.snake2))
+  const score = {'snake1': game.snake1.snakeScore, 'snake2': game.snake2.snakeScore}
+  socket.emit('game_reward', [state, direction, reward, game.getAgentsState(), score, game.isGameOver])
 })
 
+socket.on('new_game', function() {
+  game = new Game()
+})
+
+socket.on('next_step_request', function() {
+  socket.emit('game_iteration', game.getAgentsState())
+})
+
+// DOM events
 document.addEventListener("DOMContentLoaded", () => {
   playButtonElem.addEventListener('click', (event) => {
     event.preventDefault()
@@ -47,13 +53,14 @@ document.addEventListener("DOMContentLoaded", () => {
 // init game event
 playButton.addEventListener('click', (event) => {
   event.preventDefault()
-  if (!game.isGameOver) {
-    const inputAIData = game.gameStep()
-    socket.emit('ai_input_data', inputAIData)
-  }
+  socket.emit('game_iteration', game.getAgentsState())
+  playButton.disabled = true
+  newGameButton.disabled = true
 })
 
 newGameButton.addEventListener('click', (event) => {
   event.preventDefault()
-  game = new Game()
+  if (game.isGameOver) {
+    game = new Game()
+  }
 })

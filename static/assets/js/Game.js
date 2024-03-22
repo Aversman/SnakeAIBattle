@@ -238,7 +238,7 @@ class Snake {
 
 class Game {
   constructor() {
-    this.isGameOver = false
+    this.isGameOver = 0
     this.foodMaxCount = 200
     this.foodCurCount = this.foodMaxCount
     this.arena  = new Arena()
@@ -300,11 +300,11 @@ class Game {
 
     if (isSnake1Hit) {
       gameReward.snake1 = -1
-      this.isGameOver = true
+      this.isGameOver = 1
     }
     if (isSnake2Hit) {
       gameReward.snake2 = -1
-      this.isGameOver = true
+      this.isGameOver = 1
     }
     if (isSnake1HitRival.value === true & isSnake2HitRival.value === false & !isSnake2Hit) {
       gameReward.snake2 = 1
@@ -323,7 +323,7 @@ class Game {
     this._updateScreen()
     // for debug
     console.log(gameReward)
-    return this._getInputDataAI(gameReward)
+    return  gameReward
   }
   /*
     Выполняет поиск по заданной стороне для указанной змейки;
@@ -437,10 +437,10 @@ class Game {
       result[0] = 1 / distance
       result[4] = 1
     }
-    result[0] = Number(result[0].toFixed(3))
+    result[0] = Number(result[0].toFixed(4))
     return result
   }
-  _getInputDataAI(reward) {
+  getAgentsState() {
     const snake1Data = [
       ...this._findObject(1, 'topLeft'),
       ...this._findObject(1, 'top'),
@@ -449,12 +449,7 @@ class Game {
       ...this._findObject(1, 'bottomRight'),
       ...this._findObject(1, 'bottom'),
       ...this._findObject(1, 'bottomLeft'),
-      ...this._findObject(1, 'left'),
-
-      this.snake1.snakeScore / this.foodMaxCount,
-      this.snake2.snakeScore / this.foodMaxCount,
-      this.foodCurCount / (this.foodMaxCount - 1),
-      reward.snake1
+      ...this._findObject(1, 'left')
     ]
     const snake2Data = [
       ...this._findObject(2, 'topLeft'),
@@ -464,12 +459,7 @@ class Game {
       ...this._findObject(2, 'bottomRight'),
       ...this._findObject(2, 'bottom'),
       ...this._findObject(2, 'bottomLeft'),
-      ...this._findObject(2, 'left'),
-
-      this.snake2.snakeScore / this.foodMaxCount,
-      this.snake1.snakeScore / this.foodMaxCount,
-      this.foodCurCount / (this.foodMaxCount - 1),
-      reward.snake2
+      ...this._findObject(2, 'left')
     ]
     return {
       "snake1": snake1Data,
@@ -478,7 +468,7 @@ class Game {
   }
   _foodGenerate(snakeTail1, snakeTail2) {
     if (this.foodCurCount === 0) {
-      this.isGameOver = true
+      this.isGameOver = 1
       return false
     }
     this.foodCurCount--
