@@ -8,8 +8,8 @@ class LinearQNet(nn.Module):
   def __init__(self, inputSize, hiddenSize, outputSize):
     super().__init__()
     self.linear1 = nn.Linear(inputSize, hiddenSize)
-    self.linear2 = nn.Linear(hiddenSize, hiddenSize)
-    self.linear3 = nn.Linear(hiddenSize, outputSize)
+    self.linear2 = nn.Linear(hiddenSize, int(hiddenSize / 2))
+    self.linear3 = nn.Linear(int(hiddenSize / 2), outputSize)
   
   def forward(self, x):
     x = F.relu(self.linear1(x))
@@ -35,29 +35,25 @@ class QTrainer:
     self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
     self.criterion = nn.MSELoss()
   
-  def trainStep(self, state, action, reward, nextState, isGameOver):
-    state = torch.tensor(state, dtype=torch.float)
-    nextState = torch.tensor(nextState, dtype=torch.float)
-    action = torch.tensor(action, dtype=torch.long)
-    reward = torch.tensor(reward, dtype=torch.float)
+  def trainStep(self, state, action, reward, nextState, isDone):
+    state       = torch.tensor(state, dtype=torch.float)
+    nextState   = torch.tensor(nextState, dtype=torch.float)
+    action      = torch.tensor(action, dtype=torch.long)
+    reward      = torch.tensor(reward, dtype=torch.float)
 
     if len(state.shape) == 1:
-      # (1, x)
-      state = torch.unsqueeze(state, 0)
-      nextState = torch.unsqueeze(nextState, 0)
-      action = torch.unsqueeze(action, 0)
-      reward = torch.unsqueeze(reward, 0)
-      isGameOver = (isGameOver, )
+      state       = torch.unsqueeze(state, 0)
+      nextState   = torch.unsqueeze(nextState, 0)
+      action      = torch.unsqueeze(action, 0)
+      reward      = torch.unsqueeze(reward, 0)
+      isDone      = (isDone, )
 
-    # 1: predict Q value with current state
-    # predict method
     pred = self.model(state)
     target = pred.clone()
 
-    for idx in range(len(isGameOver)):
+    for idx in range(len(isDone)):
       Q_new = reward[idx]
-      if not isGameOver[idx]:
-        # self.model => predict
+      if not isDone[idx]:
         Q_new = reward[idx] + self.gamma * torch.max(self.model(nextState[idx]))
       
       target[idx][torch.argmax(action).item()] = Q_new
@@ -68,5 +64,3 @@ class QTrainer:
     loss = self.criterion(target, pred)
     loss.backward()
     self.optimizer.step()
-
-    

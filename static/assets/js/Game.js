@@ -114,6 +114,7 @@ class Snake {
     this.snakeTail = snakeConfig.snakeTail
     this.snakeDirection = snakeConfig.snakeDirection
     this.scoreElement = snakeConfig.scoreElement
+    this.scoreElement.innerHTML = 0
     this.snakeScore = 0
   }
   snakeMove(objectsWeight) {
@@ -238,6 +239,8 @@ class Snake {
 
 class Game {
   constructor() {
+    // счетчик бесполезных ходов
+    this.gameFreeIteration = 0
     this.isGameOver = 0
     this.foodMaxCount = 200
     this.foodCurCount = this.foodMaxCount
@@ -250,9 +253,9 @@ class Game {
       snakeTailColor: "#497174",
       scoreElement: document.querySelector('#snake1-score-counter'),
       snakeTail: [
-        [this.arena.objectsWeight * 3, this.arena.arenaHeight - this.arena.objectsWeight],
-        [this.arena.objectsWeight * 2, this.arena.arenaHeight - this.arena.objectsWeight],
-        [this.arena.objectsWeight * 1, this.arena.arenaHeight - this.arena.objectsWeight]
+        [this.arena.objectsWeight * 20, this.arena.arenaHeight - (this.arena.objectsWeight * 14)],
+        [this.arena.objectsWeight * 19, this.arena.arenaHeight - (this.arena.objectsWeight * 14)],
+        [this.arena.objectsWeight * 18, this.arena.arenaHeight - (this.arena.objectsWeight * 14)]
     ],
       snakeDirection: "right"
     })
@@ -263,9 +266,9 @@ class Game {
       snakeTailColor: "#744949",
       scoreElement: document.querySelector('#snake2-score-counter'),
       snakeTail: [
-        [this.arena.arenaWidth - (this.arena.objectsWeight * 4), 0],
-        [this.arena.arenaWidth - (this.arena.objectsWeight * 3), 0],
-        [this.arena.arenaWidth - (this.arena.objectsWeight * 2), 0]
+        [this.arena.arenaWidth - (this.arena.objectsWeight * 20), (this.arena.objectsWeight * 14)],
+        [this.arena.arenaWidth - (this.arena.objectsWeight * 19), (this.arena.objectsWeight * 14)],
+        [this.arena.arenaWidth - (this.arena.objectsWeight * 18), (this.arena.objectsWeight * 14)]
     ],
       snakeDirection: "left"
     })
@@ -299,37 +302,67 @@ class Game {
     const isSnake2Hit = this.snake2.isSnakeHit(this.snake1.snakeTail, isSnake2HitRival)
 
     if (isSnake1Hit) {
-      gameReward.snake1 = -1
+      gameReward.snake1 = -100
       this.isGameOver = 1
     }
     if (isSnake2Hit) {
-      gameReward.snake2 = -1
+      gameReward.snake2 = -100
       this.isGameOver = 1
     }
-    if (isSnake1HitRival.value === true & isSnake2HitRival.value === false & !isSnake2Hit) {
-      gameReward.snake2 = 1
+    /* if (isSnake1HitRival.value === true & isSnake2HitRival.value === false & !isSnake2Hit) {
+      gameReward.snake2 = 10
+      this.gameFreeIteration = 0
     }
     if (isSnake2HitRival.value === true & isSnake1HitRival.value === false & !isSnake1Hit) {
-      gameReward.snake1 = 1
-    }
+      gameReward.snake1 = 10
+      this.gameFreeIteration = 0
+    } */
     if (this.snake1.isSnakeAteFood([this.food.foodX, this.food.foodY], this.snake2.snakeTail)) {
-      gameReward.snake1 = 1
+      gameReward.snake1 = 60
+      this.gameFreeIteration = 0
       this._foodGenerate(this.snake1.snakeTail, this.snake2.snakeTail)
     }
     if (this.snake2.isSnakeAteFood([this.food.foodX, this.food.foodY], this.snake1.snakeTail)) {
-      gameReward.snake2 = 1
+      gameReward.snake2 = 60
+      this.gameFreeIteration = 0
       this._foodGenerate(this.snake1.snakeTail, this.snake2.snakeTail)
     }
     this._updateScreen()
+    
+    // проверка на зацикливание, если агент тупит долгое время, обнуляем игру
+
+    if (gameReward.snake1 === 0 & gameReward.snake2 === 0) {
+      this.gameFreeIteration++
+    }
+
+    if (this.gameFreeIteration > 350) {
+      gameReward.snake1 = -1
+      gameReward.snake2 = -1
+    }
+
+    if (this.gameFreeIteration > 500) {
+      gameReward.snake1 = -10
+      gameReward.snake2 = -10
+    }
+
+    if (this.gameFreeIteration > 1000) {
+      gameReward.snake1 = -100
+      gameReward.snake2 = -100
+      this.gameFreeIteration = 0
+      this.isGameOver = 1
+    }
+
     // for debug
     console.log(gameReward)
-    return  gameReward
+    console.log(this.gameFreeIteration)
+    return gameReward
   }
   /*
     Выполняет поиск по заданной стороне для указанной змейки;
     В forPlayer подается номер игрока (1 или 2), относительно которого будет производиться поиск;
     direction принимает значения: topLeft, topRight, bottomLeft, bottomRight, left, right, top, bottom;
   */
+  // Возвращает массив вида: [Яблоко, Свой хвост, Чужой хвост, Стена]
   _findObject(forPlayer, direction) {
     const snakeMain = (forPlayer === 1) ? this.snake1 : this.snake2
     const snakeRival = (forPlayer === 1) ? this.snake2 : this.snake1
@@ -368,7 +401,7 @@ class Game {
       default:
         break;
     }
-    const result = [0, 0, 0, 0, 0]
+    const result = [0, 0, 0, 0]
     let distance = 1
     let isFinded = false
     
@@ -378,23 +411,20 @@ class Game {
       }
       if (curX === this.food.foodX & curY === this.food.foodY) {
         isFinded = true
-        result[0] = 1 / distance
-        result[1] = 1
+        result[0] = 1
         break
       }
       for (let i = 0; i < snakeMain.snakeTail.length; i++) {
         if (snakeMain.snakeTail[i][0] === curX & snakeMain.snakeTail[i][1] === curY) {
           isFinded = true
-          result[0] = 1 / distance
-          result[2] = 1
+          result[1] = 1
           break
         }
       }
       for (let i = 0; i < snakeRival.snakeTail.length; i++) {
         if (snakeRival.snakeTail[i][0] === curX & snakeRival.snakeTail[i][1] === curY) {
           isFinded = true
-          result[0] = 1 / distance
-          result[3] = 1
+          result[2] = 1
           break
         }
       }
@@ -434,31 +464,183 @@ class Game {
     }
 
     if (!isFinded) {
-      result[0] = 1 / distance
-      result[4] = 1
+      result[3] = 1
     }
-    result[0] = Number(result[0].toFixed(4))
+    return result
+  }
+  // Возвращает массив вида: [Сверху, Справа, Снизу, Слева]
+  _findFoodDirection(forPlayer) {
+    const result = [0, 0, 0, 0]
+    const snake = (forPlayer === 1) ? this.snake1 : this.snake2
+    if (snake.snakeHeadX - this.food.foodX < 0) {
+      result[1] = 1
+    }
+    if (snake.snakeHeadX - this.food.foodX > 0) {
+      result[3] = 1
+    }
+    if (snake.snakeHeadY - this.food.foodY < 0) {
+      result[2] = 1
+    }
+    if (snake.snakeHeadY - this.food.foodY > 0) {
+      result[0] = 1
+    }
+    return result
+  }
+  // Проверяет вокруг головы змейки все препятствия и возвращает массив опасных шагов
+  // Возвращает массив вида: [Продолжить направление, Слева, Справа]
+  _findDangerDirections(forPlayer) {
+    const result  = [0, 0, 0]
+    const snake   = (forPlayer === 1) ? this.snake1 : this.snake2
+    const snake2  = (forPlayer === 1) ? this.snake2 : this.snake1
+    if (snake.snakeDirection === 'top') {
+      if (snake.snakeHeadY === 0) {
+        result[0] = 1
+      }
+      if (snake.snakeHeadX === 0) {
+        result[1] = 1
+      }
+      if (snake.snakeHeadX === this.arena.arenaWidth - this.arena.objectsWeight) {
+        result[2] = 1
+      }
+      snake.snakeTail.forEach((tail) => {
+        if (tail[0] === snake.snakeHeadX & tail[1] === snake.snakeHeadY - this.arena.objectsWeight) {
+          result[0] = 1
+        }
+        if (tail[0] === snake.snakeHeadX - this.arena.objectsWeight & tail[1] === snake.snakeHeadY) {
+          result[1] = 1
+        }
+        if (tail[0] === snake.snakeHeadX + this.arena.objectsWeight & tail[1] === snake.snakeHeadY) {
+          result[2] = 1
+        }
+      })
+      snake2.snakeTail.forEach((tail) => {
+        if (tail[0] === snake.snakeHeadX & tail[1] === snake.snakeHeadY - this.arena.objectsWeight) {
+          result[0] = 1
+        }
+        if (tail[0] === snake.snakeHeadX - this.arena.objectsWeight & tail[1] === snake.snakeHeadY) {
+          result[1] = 1
+        }
+        if (tail[0] === snake.snakeHeadX + this.arena.objectsWeight & tail[1] === snake.snakeHeadY) {
+          result[2] = 1
+        }
+      })
+    }
+    if (snake.snakeDirection === 'bottom') {
+      if (snake.snakeHeadY === this.arena.arenaHeight - this.arena.objectsWeight) {
+        result[0] = 1
+      }
+      if (snake.snakeHeadX === this.arena.arenaWidth - this.arena.objectsWeight) {
+        result[1] = 1
+      }
+      if (snake.snakeHeadX === 0) {
+        result[2] = 1
+      }
+      snake.snakeTail.forEach((tail) => {
+        if (tail[0] === snake.snakeHeadX & tail[1] === snake.snakeHeadY + this.arena.objectsWeight) {
+          result[0] = 1
+        }
+        if (tail[0] === snake.snakeHeadX + this.arena.objectsWeight & tail[1] === snake.snakeHeadY) {
+          result[1] = 1
+        }
+        if (tail[0] === snake.snakeHeadX - this.arena.objectsWeight & tail[1] === snake.snakeHeadY) {
+          result[2] = 1
+        }
+      })
+      snake2.snakeTail.forEach((tail) => {
+        if (tail[0] === snake.snakeHeadX & tail[1] === snake.snakeHeadY + this.arena.objectsWeight) {
+          result[0] = 1
+        }
+        if (tail[0] === snake.snakeHeadX + this.arena.objectsWeight & tail[1] === snake.snakeHeadY) {
+          result[1] = 1
+        }
+        if (tail[0] === snake.snakeHeadX - this.arena.objectsWeight & tail[1] === snake.snakeHeadY) {
+          result[2] = 1
+        }
+      })
+    }
+    if (snake.snakeDirection === 'left') {
+      if (snake.snakeHeadX === 0) {
+        result[0] = 1
+      }
+      if (snake.snakeHeadY === this.arena.arenaHeight - this.arena.objectsWeight) {
+        result[1] = 1
+      }
+      if (snake.snakeHeadY === 0) {
+        result[2] = 1
+      }
+      snake.snakeTail.forEach((tail) => {
+        if (tail[0] === snake.snakeHeadX - this.arena.objectsWeight & tail[1] === snake.snakeHeadY) {
+          result[0] = 1
+        }
+        if (tail[0] === snake.snakeHeadX & tail[1] === snake.snakeHeadY + this.arena.objectsWeight) {
+          result[1] = 1
+        }
+        if (tail[0] === snake.snakeHeadX & tail[1] === snake.snakeHeadY - this.arena.objectsWeight) {
+          result[2] = 1
+        }
+      })
+      snake2.snakeTail.forEach((tail) => {
+        if (tail[0] === snake.snakeHeadX - this.arena.objectsWeight & tail[1] === snake.snakeHeadY) {
+          result[0] = 1
+        }
+        if (tail[0] === snake.snakeHeadX & tail[1] === snake.snakeHeadY + this.arena.objectsWeight) {
+          result[1] = 1
+        }
+        if (tail[0] === snake.snakeHeadX & tail[1] === snake.snakeHeadY - this.arena.objectsWeight) {
+          result[2] = 1
+        }
+      })
+    }
+    if (snake.snakeDirection === 'right') {
+      if (snake.snakeHeadX === this.arena.arenaWidth - this.arena.objectsWeight) {
+        result[0] = 1
+      }
+      if (snake.snakeHeadY === 0) {
+        result[1] = 1
+      }
+      if (snake.snakeHeadY === this.arena.arenaHeight - this.arena.objectsWeight) {
+        result[2] = 1
+      }
+      snake.snakeTail.forEach((tail) => {
+        if (tail[0] === snake.snakeHeadX + this.arena.objectsWeight & tail[1] === snake.snakeHeadY) {
+          result[0] = 1
+        }
+        if (tail[0] === snake.snakeHeadX & tail[1] === snake.snakeHeadY - this.arena.objectsWeight) {
+          result[1] = 1
+        }
+        if (tail[0] === snake.snakeHeadX & tail[1] === snake.snakeHeadY + this.arena.objectsWeight) {
+          result[2] = 1
+        }
+      })
+      snake2.snakeTail.forEach((tail) => {
+        if (tail[0] === snake.snakeHeadX + this.arena.objectsWeight & tail[1] === snake.snakeHeadY) {
+          result[0] = 1
+        }
+        if (tail[0] === snake.snakeHeadX & tail[1] === snake.snakeHeadY - this.arena.objectsWeight) {
+          result[1] = 1
+        }
+        if (tail[0] === snake.snakeHeadX & tail[1] === snake.snakeHeadY + this.arena.objectsWeight) {
+          result[2] = 1
+        }
+      })
+    }
     return result
   }
   getAgentsState() {
     const snake1Data = [
-      ...this._findObject(1, 'topLeft'),
+      ...this._findDangerDirections(1),
+      ...this._findFoodDirection(1),
       ...this._findObject(1, 'top'),
-      ...this._findObject(1, 'topRight'),
       ...this._findObject(1, 'right'),
-      ...this._findObject(1, 'bottomRight'),
       ...this._findObject(1, 'bottom'),
-      ...this._findObject(1, 'bottomLeft'),
       ...this._findObject(1, 'left')
     ]
     const snake2Data = [
-      ...this._findObject(2, 'topLeft'),
+      ...this._findDangerDirections(2),
+      ...this._findFoodDirection(2),
       ...this._findObject(2, 'top'),
-      ...this._findObject(2, 'topRight'),
       ...this._findObject(2, 'right'),
-      ...this._findObject(2, 'bottomRight'),
       ...this._findObject(2, 'bottom'),
-      ...this._findObject(2, 'bottomLeft'),
       ...this._findObject(2, 'left')
     ]
     return {
@@ -483,30 +665,3 @@ class Game {
     this.arena.foodRender(this.food.foodColor, this.food.foodX, this.food.foodY)
   }
 }
-
-/*
- Нормализованная структура входных данных для сети;
- Рассматривается все относительно головы;
- Голова - 4 вершин, 8 сторон. Первой вершиной считаем верхнюю левую вершину, далее по часовой идут последующие стороны;
- Кодировка для типов объектов каждой стороны:
- [Расстояние до объекта, Яблоко, Свой хвост, Чужой хвост, Стена];
- Пример:
- [0.6, 0, 0, 0, 0, 1] - Значит, что до стенки 0.6 расстояния;
- 
- Нормализированный итоговый входной вектор по всем сторонам + доп информация:
- [
-  0.6, 0, 0, 0, 0, 1, # для 0 вершины
-  0.2, 0, 1, 0, 0, 0, # для 1 вершины
-  # .... также для остальных вершин
-  # далее передаются дополнительные данные
-  0.4, # Нормализованный счет змейки (текущий счет / максимально достижимый счет)
-  0.3, # Нормализованный счет змейки-соперника
-  0.5, # Оставшееся количество генерируемых яблок (текущее количество / начальное количество)
-  0 # награда за действие: {-1, 0, 1}
- ]
-*/
-
-/*
- На выходе ожидаем вектор длины три: [продолжить направление, повернуть влево, повернуть вправо];
- берется максимум из расспределения вероятности для конкретного решения направления;
-*/
