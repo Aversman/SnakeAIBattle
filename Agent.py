@@ -6,7 +6,7 @@ from Model import QTrainer
 
 MAX_MEMORY  = 100000
 BATCH_SIZE  = 1000
-LR          = 1e-3
+LR          = 4e-4
 
 class Agent:
   def __init__(self, model):
@@ -35,9 +35,9 @@ class Agent:
 
   def getAction(self, state):
     finalMove = [0, 0, 0]
-    dangerousDirectionsSum = state[0] + state[1] + state[2]
-
-    if random.random() < self.epsilon and dangerousDirectionsSum == 0:
+    # dangerousDirectionsSum = state[0] + state[1] + state[2]
+    
+    if random.random() < self.epsilon and self.nGames < 100:
       move = random.randint(0, 2)
       finalMove[move] = 1
     else:

@@ -242,10 +242,15 @@ class Game {
     // счетчик бесполезных ходов
     this.gameFreeIteration = 0
     this.isGameOver = 0
+    this.foodSpawnCount = 4
     this.foodMaxCount = 200
     this.foodCurCount = this.foodMaxCount
-    this.arena  = new Arena()
-    this.food   = new Food(this.arena.arenaWidth, this.arena.arenaHeight, this.arena.objectsWeight)
+    this.arena = new Arena()
+    this.food = []
+    for (let i = 0; i < this.foodSpawnCount; i++) {
+      this.food.push(new Food(this.arena.arenaWidth, this.arena.arenaHeight, this.arena.objectsWeight))
+    }
+
     this.snake1 = new Snake({
       arenaWidth: this.arena.arenaWidth,
       arenaHeight: this.arena.arenaHeight,
@@ -254,8 +259,7 @@ class Game {
       scoreElement: document.querySelector('#snake1-score-counter'),
       snakeTail: [
         [this.arena.objectsWeight * 20, this.arena.arenaHeight - (this.arena.objectsWeight * 14)],
-        [this.arena.objectsWeight * 19, this.arena.arenaHeight - (this.arena.objectsWeight * 14)],
-        [this.arena.objectsWeight * 18, this.arena.arenaHeight - (this.arena.objectsWeight * 14)]
+        [this.arena.objectsWeight * 19, this.arena.arenaHeight - (this.arena.objectsWeight * 14)]
     ],
       snakeDirection: "right"
     })
@@ -267,8 +271,7 @@ class Game {
       scoreElement: document.querySelector('#snake2-score-counter'),
       snakeTail: [
         [this.arena.arenaWidth - (this.arena.objectsWeight * 20), (this.arena.objectsWeight * 14)],
-        [this.arena.arenaWidth - (this.arena.objectsWeight * 19), (this.arena.objectsWeight * 14)],
-        [this.arena.arenaWidth - (this.arena.objectsWeight * 18), (this.arena.objectsWeight * 14)]
+        [this.arena.arenaWidth - (this.arena.objectsWeight * 19), (this.arena.objectsWeight * 14)]
     ],
       snakeDirection: "left"
     })
@@ -317,16 +320,25 @@ class Game {
       gameReward.snake1 = 10
       this.gameFreeIteration = 0
     } */
-    if (this.snake1.isSnakeAteFood([this.food.foodX, this.food.foodY], this.snake2.snakeTail)) {
-      gameReward.snake1 = 60
-      this.gameFreeIteration = 0
-      this._foodGenerate(this.snake1.snakeTail, this.snake2.snakeTail)
+
+    for (let i = 0; i < this.foodSpawnCount; i++) {
+      if (this.snake1.isSnakeAteFood([this.food[i].foodX, this.food[i].foodY])) {
+        gameReward.snake1 = 60
+        this.gameFreeIteration = 0
+        this._foodGenerate(this.snake1.snakeTail, this.snake2.snakeTail, i)
+        break
+      }
     }
-    if (this.snake2.isSnakeAteFood([this.food.foodX, this.food.foodY], this.snake1.snakeTail)) {
-      gameReward.snake2 = 60
-      this.gameFreeIteration = 0
-      this._foodGenerate(this.snake1.snakeTail, this.snake2.snakeTail)
+    
+    for (let i = 0; i < this.foodSpawnCount; i++) {
+      if (this.snake2.isSnakeAteFood([this.food[i].foodX, this.food[i].foodY])) {
+        gameReward.snake2 = 60
+        this.gameFreeIteration = 0
+        this._foodGenerate(this.snake1.snakeTail, this.snake2.snakeTail, i)
+        break
+      }
     }
+
     this._updateScreen()
     
     // проверка на зацикливание, если агент тупит долгое время, обнуляем игру
@@ -335,17 +347,7 @@ class Game {
       this.gameFreeIteration++
     }
 
-    if (this.gameFreeIteration > 350) {
-      gameReward.snake1 = -1
-      gameReward.snake2 = -1
-    }
-
-    if (this.gameFreeIteration > 500) {
-      gameReward.snake1 = -10
-      gameReward.snake2 = -10
-    }
-
-    if (this.gameFreeIteration > 1000) {
+    if (this.gameFreeIteration > 700) {
       gameReward.snake1 = -100
       gameReward.snake2 = -100
       this.gameFreeIteration = 0
@@ -629,39 +631,55 @@ class Game {
   getAgentsState() {
     const snake1Data = [
       ...this._findDangerDirections(1),
-      ...this._findFoodDirection(1),
+      ...this._findObject(1, 'topLeft'),
       ...this._findObject(1, 'top'),
+      ...this._findObject(1, 'topRight'),
       ...this._findObject(1, 'right'),
+      ...this._findObject(1, 'bottomRight'),
       ...this._findObject(1, 'bottom'),
-      ...this._findObject(1, 'left')
+      ...this._findObject(1, 'bottomLeft'),
+      ...this._findObject(1, 'left'),
     ]
     const snake2Data = [
       ...this._findDangerDirections(2),
-      ...this._findFoodDirection(2),
+      ...this._findObject(2, 'topLeft'),
       ...this._findObject(2, 'top'),
+      ...this._findObject(2, 'topRight'),
       ...this._findObject(2, 'right'),
+      ...this._findObject(2, 'bottomRight'),
       ...this._findObject(2, 'bottom'),
-      ...this._findObject(2, 'left')
+      ...this._findObject(2, 'bottomLeft'),
+      ...this._findObject(2, 'left'),
     ]
     return {
       "snake1": snake1Data,
       "snake2": snake2Data
     }
   }
-  _foodGenerate(snakeTail1, snakeTail2) {
+  _foodGenerate(snakeTail1, snakeTail2, foodIdx = null) {
     if (this.foodCurCount === 0) {
       this.isGameOver = 1
       return false
     }
-    this.foodCurCount--
-    this.foodCounterElem.innerHTML = this.foodCurCount
-    this.food.foodGenerate(snakeTail1, snakeTail2)
+    if (foodIdx !== null) {
+      this.foodCurCount--
+      this.foodCounterElem.innerHTML = this.foodCurCount
+      this.food[foodIdx].foodGenerate(snakeTail1, snakeTail2)
+      return true
+    }
+    for (let i = 0; i < this.foodSpawnCount; i++) {
+      this.foodCurCount--
+      this.foodCounterElem.innerHTML = this.foodCurCount
+      this.food[i].foodGenerate(snakeTail1, snakeTail2)
+    }
     return true
   }
   _updateScreen() {
     this.arena.gridClear()
     this.arena.snakeRender(this.snake1.snakeHeadColor, this.snake1.snakeColor, this.snake1.snakeTail)
     this.arena.snakeRender(this.snake2.snakeHeadColor, this.snake2.snakeColor, this.snake2.snakeTail)
-    this.arena.foodRender(this.food.foodColor, this.food.foodX, this.food.foodY)
+    this.food.forEach(food => {
+      this.arena.foodRender(food.foodColor, food.foodX, food.foodY)
+    })
   }
 }

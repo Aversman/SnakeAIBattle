@@ -6,7 +6,6 @@ from Agent import Agent
 from Model import LinearQNet, QTrainer
 
 # $ flask --app app.py --debug run
-# /.venv/Scripts~ $ ./flask --app ../../app.py --debug run
 
 app = Flask(__name__, static_folder='static/assets', template_folder='static/pages')
 socketio = SocketIO(app)
@@ -17,11 +16,12 @@ app.config['SECRET_KEY'] = 'b57558e3-2a61-44fc-b338-f3d1febf2a56'
 gameIterationDelay = 30
 
 # Net
-model = LinearQNet(23, 18, 3)
+model1 = LinearQNet(35, 18, 3)
+model2 = LinearQNet(35, 18, 3)
 
 # Agents
-agent1 = Agent(model)
-agent2 = Agent(model)
+agent1 = Agent(model1)
+agent2 = Agent(model2)
 
 @app.route("/")
 def home():
