@@ -305,11 +305,11 @@ class Game {
     const isSnake2Hit = this.snake2.isSnakeHit(this.snake1.snakeTail, isSnake2HitRival)
 
     if (isSnake1Hit) {
-      gameReward.snake1 = -100
+      gameReward.snake1 = -10
       this.isGameOver = 1
     }
     if (isSnake2Hit) {
-      gameReward.snake2 = -100
+      gameReward.snake2 = -10
       this.isGameOver = 1
     }
     /* if (isSnake1HitRival.value === true & isSnake2HitRival.value === false & !isSnake2Hit) {
@@ -323,7 +323,7 @@ class Game {
 
     for (let i = 0; i < this.foodSpawnCount; i++) {
       if (this.snake1.isSnakeAteFood([this.food[i].foodX, this.food[i].foodY])) {
-        gameReward.snake1 = 60
+        gameReward.snake1 = 15
         this.gameFreeIteration = 0
         this._foodGenerate(this.snake1.snakeTail, this.snake2.snakeTail, i)
         break
@@ -332,7 +332,7 @@ class Game {
     
     for (let i = 0; i < this.foodSpawnCount; i++) {
       if (this.snake2.isSnakeAteFood([this.food[i].foodX, this.food[i].foodY])) {
-        gameReward.snake2 = 60
+        gameReward.snake2 = 15
         this.gameFreeIteration = 0
         this._foodGenerate(this.snake1.snakeTail, this.snake2.snakeTail, i)
         break
@@ -347,9 +347,14 @@ class Game {
       this.gameFreeIteration++
     }
 
-    if (this.gameFreeIteration > 700) {
-      gameReward.snake1 = -100
-      gameReward.snake2 = -100
+    if (this.gameFreeIteration > 300) {
+      gameReward.snake1 = -5
+      gameReward.snake2 = -5
+    }
+
+    if (this.gameFreeIteration > 600) {
+      gameReward.snake1 = -20
+      gameReward.snake2 = -20
       this.gameFreeIteration = 0
       this.isGameOver = 1
     }
@@ -411,10 +416,12 @@ class Game {
       if (isFinded) {
         break
       }
-      if (curX === this.food.foodX & curY === this.food.foodY) {
-        isFinded = true
-        result[0] = 1
-        break
+      for (let i = 0; i < this.foodSpawnCount; i++) {
+        if (this.food[i].foodX === curX & this.food[i].foodY === curY) {
+          isFinded = true
+          result[0] = 1
+          break
+        }
       }
       for (let i = 0; i < snakeMain.snakeTail.length; i++) {
         if (snakeMain.snakeTail[i][0] === curX & snakeMain.snakeTail[i][1] === curY) {
@@ -467,24 +474,6 @@ class Game {
 
     if (!isFinded) {
       result[3] = 1
-    }
-    return result
-  }
-  // Возвращает массив вида: [Сверху, Справа, Снизу, Слева]
-  _findFoodDirection(forPlayer) {
-    const result = [0, 0, 0, 0]
-    const snake = (forPlayer === 1) ? this.snake1 : this.snake2
-    if (snake.snakeHeadX - this.food.foodX < 0) {
-      result[1] = 1
-    }
-    if (snake.snakeHeadX - this.food.foodX > 0) {
-      result[3] = 1
-    }
-    if (snake.snakeHeadY - this.food.foodY < 0) {
-      result[2] = 1
-    }
-    if (snake.snakeHeadY - this.food.foodY > 0) {
-      result[0] = 1
     }
     return result
   }

@@ -12,7 +12,7 @@ class Agent:
   def __init__(self, model):
     self.nGames = 0
     self.record = 0
-    self.epsilon = 0.3 # randomness
+    self.epsilon = 0.4 # randomness
     self.gamma = 0.9 # discount rate
     self.memory = deque(maxlen=MAX_MEMORY)
     self.model = model
@@ -35,9 +35,18 @@ class Agent:
 
   def getAction(self, state):
     finalMove = [0, 0, 0]
-    # dangerousDirectionsSum = state[0] + state[1] + state[2]
-    
-    if random.random() < self.epsilon and self.nGames < 100:
+    dangerousDirectionsSum = state[0] + state[1] + state[2]
+
+    if self.nGames == 100:
+      self.epsilon = 0.3
+    if self.nGames == 200:
+      self.epsilon = 0.2
+    if self.nGames == 300:
+      self.epsilon = 0.1
+    if self.nGames == 400:
+      self.epsilon = 0
+
+    if random.random() < self.epsilon and dangerousDirectionsSum <= 0:
       move = random.randint(0, 2)
       finalMove[move] = 1
     else:
