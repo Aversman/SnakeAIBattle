@@ -2,6 +2,8 @@ from flask import Flask, render_template
 from flask_socketio import SocketIO, send, emit
 from time import sleep
 
+import torch
+
 from Agent import Agent
 from Model import LinearQNet, QTrainer
 
@@ -16,12 +18,14 @@ app.config['SECRET_KEY'] = 'b57558e3-2a61-44fc-b338-f3d1febf2a56'
 gameIterationDelay = 30
 
 # Net
-model1 = LinearQNet(35, 18, 3)
-model2 = LinearQNet(35, 18, 3)
+model1 = LinearQNet(35, 28, 3)
+#model2 = LinearQNet(35, 28, 3)
+
+model1.load_state_dict(torch.load("model/model.pth"))
 
 # Agents
 agent1 = Agent(model1)
-agent2 = Agent(model2)
+agent2 = Agent(model1)
 
 @app.route("/")
 def home():
