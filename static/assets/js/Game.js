@@ -242,7 +242,7 @@ class Game {
     // счетчик бесполезных ходов
     this.gameFreeIteration = 0
     this.isGameOver = 0
-    this.foodSpawnCount = 4
+    this.foodSpawnCount = 6
     this.foodMaxCount = 200
     this.foodCurCount = this.foodMaxCount
     this.arena = new Arena()
@@ -304,23 +304,6 @@ class Game {
     const isSnake1Hit = this.snake1.isSnakeHit(this.snake2.snakeTail, isSnake1HitRival)
     const isSnake2Hit = this.snake2.isSnakeHit(this.snake1.snakeTail, isSnake2HitRival)
 
-    if (isSnake1Hit) {
-      gameReward.snake1 = -10
-      this.isGameOver = 1
-    }
-    if (isSnake2Hit) {
-      gameReward.snake2 = -10
-      this.isGameOver = 1
-    }
-    /* if (isSnake1HitRival.value === true & isSnake2HitRival.value === false & !isSnake2Hit) {
-      gameReward.snake2 = 10
-      this.gameFreeIteration = 0
-    }
-    if (isSnake2HitRival.value === true & isSnake1HitRival.value === false & !isSnake1Hit) {
-      gameReward.snake1 = 10
-      this.gameFreeIteration = 0
-    } */
-
     for (let i = 0; i < this.foodSpawnCount; i++) {
       if (this.snake1.isSnakeAteFood([this.food[i].foodX, this.food[i].foodY])) {
         gameReward.snake1 = 15
@@ -339,10 +322,8 @@ class Game {
       }
     }
 
-    this._updateScreen()
     
     // проверка на зацикливание, если агент тупит долгое время, обнуляем игру
-
     if (gameReward.snake1 === 0 & gameReward.snake2 === 0) {
       this.gameFreeIteration++
     }
@@ -352,12 +333,23 @@ class Game {
       gameReward.snake2 = -5
     }
 
+    if (isSnake1Hit) {
+      gameReward.snake1 = -10
+      this.isGameOver = 1
+    }
+    if (isSnake2Hit) {
+      gameReward.snake2 = -10
+      this.isGameOver = 1
+    }
+
     if (this.gameFreeIteration > 600) {
       gameReward.snake1 = -20
       gameReward.snake2 = -20
       this.gameFreeIteration = 0
       this.isGameOver = 1
     }
+
+    this._updateScreen()
 
     // for debug
     console.log(gameReward)
@@ -420,6 +412,7 @@ class Game {
         if (this.food[i].foodX === curX & this.food[i].foodY === curY) {
           isFinded = true
           result[0] = 1
+          // result[4] = 1 / distance
           break
         }
       }
@@ -427,6 +420,7 @@ class Game {
         if (snakeMain.snakeTail[i][0] === curX & snakeMain.snakeTail[i][1] === curY) {
           isFinded = true
           result[1] = 1
+          // result[4] = 1 / distance
           break
         }
       }
@@ -434,6 +428,7 @@ class Game {
         if (snakeRival.snakeTail[i][0] === curX & snakeRival.snakeTail[i][1] === curY) {
           isFinded = true
           result[2] = 1
+          // result[4] = 1 / distance
           break
         }
       }
@@ -473,8 +468,10 @@ class Game {
     }
 
     if (!isFinded) {
+      // result[4] = 1 / distance
       result[3] = 1
     }
+    // result[4] = Number(result[4].toFixed(3))
     return result
   }
   // Проверяет вокруг головы змейки все препятствия и возвращает массив опасных шагов
