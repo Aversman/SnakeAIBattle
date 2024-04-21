@@ -5,7 +5,7 @@ from time import sleep
 import torch
 
 from Agent import Agent
-from Model import LinearQNet, QTrainer
+from Model import LinearQNetModel1
 
 # $ flask --app app.py --debug run
 
@@ -18,11 +18,11 @@ app.config['SECRET_KEY'] = 'b57558e3-2a61-44fc-b338-f3d1febf2a56'
 gameIterationDelay = 30
 
 # Net
-model1 = LinearQNet(35, 28, 3)
-model2 = LinearQNet(35, 28, 3)
+model1 = LinearQNetModel1(35, 28, 3)
+model2 = LinearQNetModel1(35, 28, 3)
 
-model1.load_state_dict(torch.load("model/model.pth"))
-model2.load_state_dict(torch.load("model/model.pth"))
+model1.load_state_dict(torch.load("models/model1_34.pth"))
+model2.load_state_dict(torch.load("models/model1_34.pth"))
 
 # Agents
 agent1 = Agent(model1, 0)
@@ -35,27 +35,26 @@ def home():
 
 @socketio.on('game_iteration')
 def game_iteration_handler(state):
-  snake1Move = agent1.getAction(state['snake1'])
-  snake2Move = agent2.getAction(state['snake2'])
-  agentsDirection = {
-    'snake1': snake1Move,
-    'snake2': snake2Move
+  snake1Action = agent1.getAction(state['snake1'])
+  snake2Action = agent2.getAction(state['snake2'])
+  agentsAction = {
+    'snake1': snake1Action,
+    'snake2': snake2Action
   }
   sleep(gameIterationDelay / 1000)
-  emit('play_step', [state, agentsDirection])
+  emit('play_step', [state, agentsAction])
 
 
 @socketio.on('game_reward')
 def game_reward_handler(response):
-  oldState, direction, reward, state, score, isDone = response
-  
-  agent1.trainShortMemory(oldState['snake1'], direction['snake1'], reward['snake1'], state['snake1'], isDone)
-  agent2.trainShortMemory(oldState['snake2'], direction['snake2'], reward['snake2'], state['snake2'], isDone)
+  state, action, reward, newState, score, done = response
+  agent1.trainShortMemory(state['snake1'], action['snake1'], reward['snake1'], newState['snake1'], done)
+  agent2.trainShortMemory(state['snake2'], action['snake2'], reward['snake2'], newState['snake2'], done)
 
-  agent1.remember(oldState['snake1'], direction['snake1'], reward['snake1'], state['snake1'], isDone)
-  agent2.remember(oldState['snake2'], direction['snake2'], reward['snake2'], state['snake2'], isDone)
+  agent1.remember(state['snake1'], action['snake1'], reward['snake1'], newState['snake1'], done)
+  agent2.remember(state['snake2'], action['snake2'], reward['snake2'], newState['snake2'], done)
 
-  if isDone:
+  if done:
     agent1.nGames += 1
     agent2.nGames += 1
     agent1.trainLongMemory()

@@ -242,6 +242,7 @@ class Game {
     // счетчик бесполезных ходов
     this.gameFreeIteration = 0
     this.isGameOver = 0
+    this.modelAI = 1
     this.foodSpawnCount = 6
     this.foodMaxCount = 200
     this.foodCurCount = this.foodMaxCount
@@ -328,7 +329,7 @@ class Game {
       this.gameFreeIteration++
     }
 
-    if (this.gameFreeIteration > 300) {
+    if (this.gameFreeIteration > 150) {
       gameReward.snake1 = -5
       gameReward.snake2 = -5
     }
@@ -342,7 +343,7 @@ class Game {
       this.isGameOver = 1
     }
 
-    if (this.gameFreeIteration > 600) {
+    if (this.gameFreeIteration > 400) {
       gameReward.snake1 = -20
       gameReward.snake2 = -20
       this.gameFreeIteration = 0
@@ -368,6 +369,27 @@ class Game {
     const objectsWeight = this.arena.objectsWeight
     let curX = snakeMain.snakeHeadX
     let curY = snakeMain.snakeHeadY
+
+    if (curX >= this.arena.arenaWidth | curX < 0) {
+      return [0, 0, 0, 1]
+    }
+
+    if (curY >= this.arena.arenaHeight | curY < 0) {
+      return [0, 0, 0, 1]
+    }
+
+    for (let i = 1; i < snakeMain.snakeTail.length; i++) {
+      if (snakeMain.snakeHeadX === snakeMain.snakeTail[i][0] & snakeMain.snakeHeadY === snakeMain.snakeTail[i][1]) {
+        return [0, 0, 0, 1]
+      }
+    }
+
+    for (let i = 0; i < snakeRival.snakeTail.length; i++) {
+      if (snakeMain.snakeHeadX === snakeRival.snakeTail[i][0] & snakeMain.snakeHeadY === snakeRival.snakeTail[i][1]) {
+        return [0, 0, 0, 1]
+      }
+    }
+
     switch (direction) {
       case 'top':
         curY -= objectsWeight
@@ -474,12 +496,122 @@ class Game {
     // result[4] = Number(result[4].toFixed(3))
     return result
   }
+  // squareSideLength - обязательно нечетное число
+  _searchByArea(squareSideLength, forPlayer) {
+    // result - матрица в виде упорядоченного вектора (массива)
+    const result = []
+    const snake1   = (forPlayer === 1) ? this.snake1 : this.snake2
+    const snake2  = (forPlayer === 1) ? this.snake2 : this.snake1
+    let curX = snake1.snakeHeadX - (((squareSideLength - 1) / 2) * this.arena.objectsWeight)
+    let curY = snake1.snakeHeadY - (((squareSideLength - 1) / 2) * this.arena.objectsWeight)
+    for (let i = 0; i < squareSideLength; i++) {
+      rowCounter: for (let j = 0; j < squareSideLength; j++) {
+        //this.arena.foodRender('#333', curX, curY)
+        // 0 - Пустота, 0.25 - Голова, 0.5 - Яблоко, 1 - Плохое припятствие
+        let matrixPointValue = 0
+        
+        for (let k = 0; k < this.food.length; k++) {
+          if (curX === this.food[k].foodX & curY === this.food[k].foodY) {
+            matrixPointValue = 0.5
+            this.arena.foodRender('#fc0303', curX, curY)
+            result.push(matrixPointValue)
+            curX += this.arena.objectsWeight
+            continue rowCounter
+          }
+        }
+
+        for (let k = 0; k < snake1.snakeTail.length; k++) {
+          if (curX === snake1.snakeTail[k][0] & curY === snake1.snakeTail[k][1]) {
+            if (k === 0) {
+              matrixPointValue = 0.25
+              this.arena.foodRender('#2803fc', curX, curY)
+            }else {
+              matrixPointValue = 1
+              this.arena.foodRender('#fc7703', curX, curY)
+            }
+            result.push(matrixPointValue)
+            curX += this.arena.objectsWeight
+            continue rowCounter
+          }
+        }
+
+        for (let k = 0; k < snake2.snakeTail.length; k++) {
+          if (curX === snake2.snakeTail[k][0] & curY === snake2.snakeTail[k][1]) {
+            matrixPointValue = 1
+            this.arena.foodRender('#fc7703', curX, curY)
+            result.push(matrixPointValue)
+            curX += this.arena.objectsWeight
+            continue rowCounter
+          }
+        }
+
+        if (curX >= 0 & curX < this.arena.arenaWidth & curY >= 0 & curY < this.arena.arenaHeight) {
+          this.arena.foodRender('#03fc2c', curX, curY)
+          result.push(matrixPointValue)
+          curX += this.arena.objectsWeight
+          continue
+        }
+
+        // Если ни один объект не был обнаружен, значит, это стенка
+        this.arena.foodRender('#fc7703', curX, curY)
+        matrixPointValue = 1
+        result.push(matrixPointValue)
+        curX += this.arena.objectsWeight
+      }
+      curY += this.arena.objectsWeight
+      curX -= (this.arena.objectsWeight * squareSideLength)
+    }
+    return result
+  }
+  // [лево, верх, право, низ]
+  _getSnakeDirection(forPlayer) {
+    const result = [0, 0, 0, 0]
+    const snake = (forPlayer === 1) ? this.snake1 : this.snake2
+    switch (snake.snakeDirection) {
+      case 'left':
+        result[0] = 1
+        break;
+      case 'top':
+        result[1] = 1
+        break;
+      case 'right':
+        result[2] = 1
+        break;
+      case 'bottom':
+        result[3] = 1
+        break;
+      default:
+        break;
+    }
+    return result
+  }
   // Проверяет вокруг головы змейки все препятствия и возвращает массив опасных шагов
   // Возвращает массив вида: [Продолжить направление, Слева, Справа]
   _findDangerDirections(forPlayer) {
     const result  = [0, 0, 0]
     const snake   = (forPlayer === 1) ? this.snake1 : this.snake2
     const snake2  = (forPlayer === 1) ? this.snake2 : this.snake1
+
+    if (snake.snakeHeadX >= this.arena.arenaWidth | snake.snakeHeadX < 0) {
+      return [1, 1, 1]
+    }
+
+    if (snake.snakeHeadY >= this.arena.arenaHeight | snake.snakeHeadY < 0) {
+      return [1, 1, 1]
+    }
+
+    for (let i = 1; i < snake.snakeTail.length; i++) {
+      if (snake.snakeHeadX === snake.snakeTail[i][0] & snake.snakeHeadY === snake.snakeTail[i][1]) {
+        return [1, 1, 1]
+      }
+    }
+
+    for (let i = 0; i < snake2.snakeTail.length; i++) {
+      if (snake.snakeHeadX === snake2.snakeTail[i][0] & snake.snakeHeadY === snake2.snakeTail[i][1]) {
+        return [1, 1, 1]
+      }
+    }
+
     if (snake.snakeDirection === 'top') {
       if (snake.snakeHeadY === 0) {
         result[0] = 1
@@ -615,28 +747,36 @@ class Game {
     return result
   }
   getAgentsState() {
-    const snake1Data = [
-      ...this._findDangerDirections(1),
-      ...this._findObject(1, 'topLeft'),
-      ...this._findObject(1, 'top'),
-      ...this._findObject(1, 'topRight'),
-      ...this._findObject(1, 'right'),
-      ...this._findObject(1, 'bottomRight'),
-      ...this._findObject(1, 'bottom'),
-      ...this._findObject(1, 'bottomLeft'),
-      ...this._findObject(1, 'left'),
-    ]
-    const snake2Data = [
-      ...this._findDangerDirections(2),
-      ...this._findObject(2, 'topLeft'),
-      ...this._findObject(2, 'top'),
-      ...this._findObject(2, 'topRight'),
-      ...this._findObject(2, 'right'),
-      ...this._findObject(2, 'bottomRight'),
-      ...this._findObject(2, 'bottom'),
-      ...this._findObject(2, 'bottomLeft'),
-      ...this._findObject(2, 'left'),
-    ]
+    let snake1Data = null
+    let snake2Data = null
+    if (this.modelAI === 1) {
+      snake1Data = [
+        ...this._findDangerDirections(1),
+        ...this._findObject(1, 'topLeft'),
+        ...this._findObject(1, 'top'),
+        ...this._findObject(1, 'topRight'),
+        ...this._findObject(1, 'right'),
+        ...this._findObject(1, 'bottomRight'),
+        ...this._findObject(1, 'bottom'),
+        ...this._findObject(1, 'bottomLeft'),
+        ...this._findObject(1, 'left'),
+      ]
+      snake2Data = [
+        ...this._findDangerDirections(2),
+        ...this._findObject(2, 'topLeft'),
+        ...this._findObject(2, 'top'),
+        ...this._findObject(2, 'topRight'),
+        ...this._findObject(2, 'right'),
+        ...this._findObject(2, 'bottomRight'),
+        ...this._findObject(2, 'bottom'),
+        ...this._findObject(2, 'bottomLeft'),
+        ...this._findObject(2, 'left'),
+      ]
+    }
+    else {
+      snake1Data = [...this._getSnakeDirection(1), ...this._searchByArea(7, 1)]
+      snake2Data = [...this._getSnakeDirection(2), ...this._searchByArea(7, 2)]
+    }
     return {
       "snake1": snake1Data,
       "snake2": snake2Data

@@ -35,13 +35,18 @@ class Agent:
   
   def getRandomMove(self):
     finalMove = [0, 0, 0]
-    if self.nGames == 100:
+    
+    if self.nGames == 100 and self.epsilon > 0.5:
+      self.epsilon = 0.4
+    if self.nGames == 150 and self.epsilon > 0.4:
       self.epsilon = 0.3
-    if self.nGames == 200:
+    if self.nGames == 200 and self.epsilon > 0.3:
       self.epsilon = 0.2
-    if self.nGames == 300:
+    if self.nGames == 250 and self.epsilon > 0.2:
+      self.epsilon = 0.2
+    if self.nGames == 300 and self.epsilon > 0.2:
       self.epsilon = 0.1
-    if self.nGames == 500:
+    if self.nGames == 350 and self.epsilon > 0.1:
       self.epsilon = 0
     
     move = random.randint(0, 2)
@@ -51,9 +56,8 @@ class Agent:
 
   def getAction(self, state):
     finalMove = [0, 0, 0]
-    if self.epsilon != 0:
-      if random.random() < self.epsilon:
-        finalMove = self.getRandomMove()
+    if random.random() < self.epsilon:
+      finalMove = self.getRandomMove()
     else:
       state0 = torch.tensor(state, dtype=torch.float)
       prediction = self.model(state0)
