@@ -46,7 +46,7 @@ class Agent:
       self.epsilon = 0.2
     if self.nGames == 300 and self.epsilon > 0.2:
       self.epsilon = 0.1
-    if self.nGames == 350 and self.epsilon > 0.1:
+    if self.nGames == 500 and self.epsilon > 0.1:
       self.epsilon = 0
     
     move = random.randint(0, 2)

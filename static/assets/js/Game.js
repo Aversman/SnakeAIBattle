@@ -242,7 +242,7 @@ class Game {
     // счетчик бесполезных ходов
     this.gameFreeIteration = 0
     this.isGameOver = 0
-    this.modelAI = 1
+    this.modelAI = 2
     this.foodSpawnCount = 6
     this.foodMaxCount = 200
     this.foodCurCount = this.foodMaxCount
@@ -507,12 +507,12 @@ class Game {
     for (let i = 0; i < squareSideLength; i++) {
       rowCounter: for (let j = 0; j < squareSideLength; j++) {
         //this.arena.foodRender('#333', curX, curY)
-        // 0 - Пустота, 0.25 - Голова, 0.5 - Яблоко, 1 - Плохое припятствие
+        // 0 - Пустота, 1 - Голова, 3 - Яблоко, 2 - Плохое припятствие
         let matrixPointValue = 0
         
         for (let k = 0; k < this.food.length; k++) {
           if (curX === this.food[k].foodX & curY === this.food[k].foodY) {
-            matrixPointValue = 0.5
+            matrixPointValue = 3
             this.arena.foodRender('#fc0303', curX, curY)
             result.push(matrixPointValue)
             curX += this.arena.objectsWeight
@@ -523,10 +523,10 @@ class Game {
         for (let k = 0; k < snake1.snakeTail.length; k++) {
           if (curX === snake1.snakeTail[k][0] & curY === snake1.snakeTail[k][1]) {
             if (k === 0) {
-              matrixPointValue = 0.25
-              this.arena.foodRender('#2803fc', curX, curY)
-            }else {
               matrixPointValue = 1
+              this.arena.foodRender('#000', curX, curY)
+            }else {
+              matrixPointValue = 2
               this.arena.foodRender('#fc7703', curX, curY)
             }
             result.push(matrixPointValue)
@@ -537,7 +537,7 @@ class Game {
 
         for (let k = 0; k < snake2.snakeTail.length; k++) {
           if (curX === snake2.snakeTail[k][0] & curY === snake2.snakeTail[k][1]) {
-            matrixPointValue = 1
+            matrixPointValue = 2
             this.arena.foodRender('#fc7703', curX, curY)
             result.push(matrixPointValue)
             curX += this.arena.objectsWeight
@@ -554,7 +554,7 @@ class Game {
 
         // Если ни один объект не был обнаружен, значит, это стенка
         this.arena.foodRender('#fc7703', curX, curY)
-        matrixPointValue = 1
+        matrixPointValue = 2
         result.push(matrixPointValue)
         curX += this.arena.objectsWeight
       }
@@ -774,8 +774,8 @@ class Game {
       ]
     }
     else {
-      snake1Data = [...this._getSnakeDirection(1), ...this._searchByArea(7, 1)]
-      snake2Data = [...this._getSnakeDirection(2), ...this._searchByArea(7, 2)]
+      snake1Data = this._searchByArea(15, 1)
+      snake2Data = this._searchByArea(15, 2)
     }
     return {
       "snake1": snake1Data,
