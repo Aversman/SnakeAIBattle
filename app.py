@@ -21,15 +21,15 @@ gameIterationDelay = 30
 """ model1 = LinearQNetModel1(35, 28, 3)
 model2 = LinearQNetModel1(35, 28, 3) """
 
-model1 = LinearQNetModel2(361, 361, 3)
-model2 = LinearQNetModel2(361, 361, 3)
+model1 = LinearQNetModel2(85, 70, 3)
+model2 = LinearQNetModel2(85, 70, 3)
 
-#model1.load_state_dict(torch.load("models/model2.pth"))
-#model2.load_state_dict(torch.load("models/model2.pth"))
+model1.load_state_dict(torch.load("models/model2.pth"))
+model2.load_state_dict(torch.load("models/model2.pth"))
 
 # Agents
-agent1 = Agent(model1, 0.5)
-agent2 = Agent(model2, 0.5)
+agent1 = Agent(model1, 0.1)
+agent2 = Agent(model2, 0.1)
 
 @app.route("/")
 def home():

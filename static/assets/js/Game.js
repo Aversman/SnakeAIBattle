@@ -496,70 +496,123 @@ class Game {
     // result[4] = Number(result[4].toFixed(3))
     return result
   }
+
+  _classifyObjectByCoords(forPlayer, x, y) {
+    const snake1   = (forPlayer === 1) ? this.snake1 : this.snake2
+    const snake2  = (forPlayer === 1) ? this.snake2 : this.snake1
+    // [Яблоко, Хвост (свой или чужой), Стена]
+    const result = [0, 0, 0]
+    for (let i = 0; i < this.food.length; i++) {
+      if (x === this.food[i].foodX & y === this.food[i].foodY) {
+        result[0] = 1
+        return result
+      }
+    }
+    for (let i = 0; i < snake1.snakeTail.length; i++) {
+      if (x === snake1.snakeTail[i][0] & y === snake1.snakeTail[i][1]) {
+        result[1] = 1
+        return result
+      }
+    }
+    for (let i = 0; i < snake2.snakeTail.length; i++) {
+      if (x === snake2.snakeTail[i][0] & y === snake2.snakeTail[i][1]) {
+        result[1] = 1
+        return result
+      }
+    }
+    if (!(x >= 0 & x < this.arena.arenaWidth & y >= 0 & y < this.arena.arenaHeight)) {
+      result[2] = 1
+    }
+    return result
+  }
   // squareSideLength - обязательно нечетное число
-  _searchByArea(squareSideLength, forPlayer) {
+  _searchByArea(forPlayer, squareSideLength=15) {
     // result - матрица в виде упорядоченного вектора (массива)
     const result = []
     const snake1   = (forPlayer === 1) ? this.snake1 : this.snake2
-    const snake2  = (forPlayer === 1) ? this.snake2 : this.snake1
+    const zoneSideLength = 3
+    const zonesRowCount = squareSideLength / zoneSideLength
     let curX = snake1.snakeHeadX - (((squareSideLength - 1) / 2) * this.arena.objectsWeight)
     let curY = snake1.snakeHeadY - (((squareSideLength - 1) / 2) * this.arena.objectsWeight)
-    for (let i = 0; i < squareSideLength; i++) {
-      rowCounter: for (let j = 0; j < squareSideLength; j++) {
-        //this.arena.foodRender('#333', curX, curY)
-        // 0 - Пустота, 1 - Голова, 3 - Яблоко, 2 - Плохое припятствие
-        let matrixPointValue = 0
-        
-        for (let k = 0; k < this.food.length; k++) {
-          if (curX === this.food[k].foodX & curY === this.food[k].foodY) {
-            matrixPointValue = 3
-            this.arena.foodRender('#fc0303', curX, curY)
-            result.push(matrixPointValue)
-            curX += this.arena.objectsWeight
-            continue rowCounter
+
+    //let counter = 1
+    for (let i = 0; i < zonesRowCount; i++) {
+      for (let j = 0; j < zonesRowCount; j++) {
+        const zoneData = [0, 0, 0]
+        let zoneX = curX
+        let zoneY = curY
+
+        for (let k = 0; k < zoneSideLength; k++) {
+          for (let t = 0; t < zoneSideLength; t++) {
+            this.arena.foodRender('rgba(0,0,0,.3)', zoneX, zoneY)
+            const pointObject = this._classifyObjectByCoords(forPlayer, zoneX, zoneY)
+            pointObject.forEach((elem, idx) => {if (zoneData[idx] < 1) zoneData[idx] += elem})
+            zoneX += this.arena.objectsWeight
           }
+          zoneY += this.arena.objectsWeight
+          zoneX = curX
         }
-
-        for (let k = 0; k < snake1.snakeTail.length; k++) {
-          if (curX === snake1.snakeTail[k][0] & curY === snake1.snakeTail[k][1]) {
-            if (k === 0) {
-              matrixPointValue = 1
-              this.arena.foodRender('#000', curX, curY)
-            }else {
-              matrixPointValue = 2
-              this.arena.foodRender('#fc7703', curX, curY)
-            }
-            result.push(matrixPointValue)
-            curX += this.arena.objectsWeight
-            continue rowCounter
-          }
-        }
-
-        for (let k = 0; k < snake2.snakeTail.length; k++) {
-          if (curX === snake2.snakeTail[k][0] & curY === snake2.snakeTail[k][1]) {
-            matrixPointValue = 2
-            this.arena.foodRender('#fc7703', curX, curY)
-            result.push(matrixPointValue)
-            curX += this.arena.objectsWeight
-            continue rowCounter
-          }
-        }
-
-        if (curX >= 0 & curX < this.arena.arenaWidth & curY >= 0 & curY < this.arena.arenaHeight) {
-          this.arena.foodRender('#03fc2c', curX, curY)
-          result.push(matrixPointValue)
-          curX += this.arena.objectsWeight
-          continue
-        }
-
-        // Если ни один объект не был обнаружен, значит, это стенка
-        this.arena.foodRender('#fc7703', curX, curY)
-        matrixPointValue = 2
-        result.push(matrixPointValue)
-        curX += this.arena.objectsWeight
+        //console.log(counter, zoneData)
+        //counter++
+        result.push(...zoneData)
+        curX += (this.arena.objectsWeight * zoneSideLength)
       }
-      curY += this.arena.objectsWeight
-      curX -= (this.arena.objectsWeight * squareSideLength)
+      curX = snake1.snakeHeadX - (((squareSideLength - 1) / 2) * this.arena.objectsWeight)
+      curY += (this.arena.objectsWeight * zoneSideLength)
+    }
+    return result
+  }
+  // Проверяет не находится ли еда у головы в трех направлениях: [Продолжить направление, Слева, Справа]
+  _isFoodNearby(forPlayer) {
+    const result = [0, 0, 0]
+    const snake = (forPlayer === 1) ? this.snake1 : this.snake2
+    switch (snake.snakeDirection) {
+      case 'left':
+        if (this._classifyObjectByCoords(forPlayer, snake.snakeHeadX - this.arena.objectsWeight, snake.snakeHeadY)[0] === 1) {
+          result[0] = 1
+        }
+        if (this._classifyObjectByCoords(forPlayer, snake.snakeHeadX, snake.snakeHeadY + this.arena.objectsWeight)[0] === 1) {
+          result[1] = 1
+        }
+        if (this._classifyObjectByCoords(forPlayer, snake.snakeHeadX, snake.snakeHeadY - this.arena.objectsWeight)[0] === 1) {
+          result[2] = 1
+        }
+        break;
+      case 'top':
+        if (this._classifyObjectByCoords(forPlayer, snake.snakeHeadX, snake.snakeHeadY - this.arena.objectsWeight)[0] === 1) {
+          result[0] = 1
+        }
+        if (this._classifyObjectByCoords(forPlayer, snake.snakeHeadX - this.arena.objectsWeight, snake.snakeHeadY )[0] === 1) {
+          result[1] = 1
+        }
+        if (this._classifyObjectByCoords(forPlayer, snake.snakeHeadX + this.arena.objectsWeight, snake.snakeHeadY)[0] === 1) {
+          result[2] = 1
+        }
+        break;
+      case 'right':
+        if (this._classifyObjectByCoords(forPlayer, snake.snakeHeadX + this.arena.objectsWeight, snake.snakeHeadY)[0] === 1) {
+          result[0] = 1
+        }
+        if (this._classifyObjectByCoords(forPlayer, snake.snakeHeadX, snake.snakeHeadY - this.arena.objectsWeight)[0] === 1) {
+          result[1] = 1
+        }
+        if (this._classifyObjectByCoords(forPlayer, snake.snakeHeadX, snake.snakeHeadY + this.arena.objectsWeight)[0] === 1) {
+          result[2] = 1
+        }
+        break;
+      case 'bottom':
+        if (this._classifyObjectByCoords(forPlayer, snake.snakeHeadX, snake.snakeHeadY + this.arena.objectsWeight)[0] === 1) {
+          result[0] = 1
+        }
+        if (this._classifyObjectByCoords(forPlayer, snake.snakeHeadX + this.arena.objectsWeight, snake.snakeHeadY )[0] === 1) {
+          result[1] = 1
+        }
+        if (this._classifyObjectByCoords(forPlayer, snake.snakeHeadX - this.arena.objectsWeight, snake.snakeHeadY)[0] === 1) {
+          result[2] = 1
+        }
+        break;
+      default:
+        break;
     }
     return result
   }
@@ -774,8 +827,18 @@ class Game {
       ]
     }
     else {
-      snake1Data = this._searchByArea(15, 1)
-      snake2Data = this._searchByArea(15, 2)
+      snake1Data = [
+        ...this._isFoodNearby(1),
+        ...this._getSnakeDirection(1),
+        ...this._findDangerDirections(1),
+        ...this._searchByArea(1)
+      ]
+      snake2Data = [
+        ...this._isFoodNearby(2),
+        ...this._getSnakeDirection(2),
+        ...this._findDangerDirections(2),
+        ...this._searchByArea(2)
+      ]
     }
     return {
       "snake1": snake1Data,
