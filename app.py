@@ -5,7 +5,7 @@ from time import sleep
 import torch
 
 from Agent import Agent
-from Model import LinearQNetModel1, LinearQNetModel2
+from Model import LinearQNetModel, CNNQNetModel
 
 # $ flask --app app.py --debug run
 
@@ -18,18 +18,18 @@ app.config['SECRET_KEY'] = 'b57558e3-2a61-44fc-b338-f3d1febf2a56'
 gameIterationDelay = 30
 
 # Net
-""" model1 = LinearQNetModel1(35, 28, 3)
-model2 = LinearQNetModel1(35, 28, 3) """
+""" model1 = LinearQNetModel(35, 28, 3)
+model2 = LinearQNetModel(35, 28, 3) """
 
-model1 = LinearQNetModel2(85, 70, 3)
-model2 = LinearQNetModel2(85, 70, 3)
+model1 = CNNQNetModel(3)
+model2 = CNNQNetModel(3)
 
-model1.load_state_dict(torch.load("models/model2.pth"))
-model2.load_state_dict(torch.load("models/model2.pth"))
+model1.load_state_dict(torch.load("models/model_cnn.pth"))
+model2.load_state_dict(torch.load("models/model_cnn.pth"))
 
 # Agents
-agent1 = Agent(model1, 0.1)
-agent2 = Agent(model2, 0.1)
+agent1 = Agent(model1, 0.3)
+agent2 = Agent(model2, 0.3)
 
 @app.route("/")
 def home():
