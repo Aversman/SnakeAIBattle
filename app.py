@@ -24,12 +24,12 @@ model2 = LinearQNetModel(35, 28, 3) """
 model1 = CNNQNetModel(3)
 model2 = CNNQNetModel(3)
 
-model1.load_state_dict(torch.load("models/model_cnn.pth"))
-model2.load_state_dict(torch.load("models/model_cnn.pth"))
+#model1.load_state_dict(torch.load("models/model_cnn.pth"))
+#model2.load_state_dict(torch.load("models/model_cnn.pth"))
 
 # Agents
-agent1 = Agent(model1, 0.3)
-agent2 = Agent(model2, 0.3)
+agent1 = Agent(model1, 0.5)
+agent2 = Agent(model2, 0.5)
 
 @app.route("/")
 def home():

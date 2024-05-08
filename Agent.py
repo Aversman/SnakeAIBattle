@@ -5,14 +5,14 @@ import random
 from Model import QTrainer
 
 MAX_MEMORY  = 100_000
-BATCH_SIZE  = 1000
+BATCH_SIZE  = 700
 LR          = 1e-3
 
 class Agent:
   def __init__(self, model, epsilon):
     self.nGames = 0
     self.record = 0
-    self.gamma = 0.9 # discount rate
+    self.gamma = 0.95 # discount rate
     self.epsilon = epsilon # randomness
     self.memory = deque(maxlen=MAX_MEMORY)
     self.model = model
@@ -43,8 +43,6 @@ class Agent:
     if self.nGames == 200 and self.epsilon >= 0.3:
       self.epsilon = 0.2
     if self.nGames == 250 and self.epsilon >= 0.2:
-      self.epsilon = 0.2
-    if self.nGames == 300 and self.epsilon >= 0.2:
       self.epsilon = 0.1
     if self.nGames == 500 and self.epsilon >= 0.1:
       self.epsilon = 0

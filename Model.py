@@ -31,47 +31,41 @@ class LinearQNetModel(nn.Module):
 
 # Model 2
 class CNNQNetModel(nn.Module):
-    def __init__(self, output_size):
-        super().__init__()
-        self.conv1 = nn.Conv2d(1, 16, kernel_size=3, stride=1, padding=1)
-        self.bn1 = nn.BatchNorm2d(16)
+  def __init__(self, output_size):
+    super().__init__()
+    self.conv1 = nn.Conv2d(1, 16, kernel_size=3, stride=1, padding=1)
+    self.bn1 = nn.BatchNorm2d(16)
+
+    self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1)
+    self.bn2 = nn.BatchNorm2d(32)
+
+    self.pool = nn.MaxPool2d(2)
+    self.flatten = nn.Flatten()
+
+    self.fc1 = nn.Linear(32*4*4, 40)
+    self.fc2 = nn.Linear(40, output_size)
+
+
+  def forward(self, x):
+    x = x.view(-1, 1, 19, 19)
+    x = F.relu(self.bn1(self.conv1(x)))
+    x = self.pool(x)
+    x = F.relu(self.bn2(self.conv2(x)))
+    x = self.pool(x)
+    x = self.flatten(x)
+    
+    x = F.relu(self.fc1(x))
+    x = self.fc2(x)
+    return x
+
+  def save(self, filename='model_cnn.pth'):
+    modelFolderPath = 'models'
+
+    if not os.path.exists(modelFolderPath):
+      os.makedirs(modelFolderPath)
         
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1)
-        self.bn2 = nn.BatchNorm2d(32)
-
-        self.conv3 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1)
-        self.bn3 = nn.BatchNorm2d(64)
-
-        self.conv4 = nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1)
-        self.bn4 = nn.BatchNorm2d(128)
-
-        # Адаптивный слой пулинга
-        self.pool = nn.AdaptiveAvgPool2d(1)
-
-        self.fc1 = nn.Linear(128, 64)
-        self.fc2 = nn.Linear(64, output_size)
-
-    def forward(self, x):
-        x = x.view(-1, 1, 19, 19)
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = F.relu(self.bn2(self.conv2(x)))
-        x = F.relu(self.bn3(self.conv3(x)))
-        x = F.relu(self.bn4(self.conv4(x)))
-        x = self.pool(x)
-        # Выравнивание данных для полносвязного слоя
-        x = x.view(x.size(0), -1)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        return x
-
-    def save(self, filename='model_cnn.pth'):
-        modelFolderPath = 'models'
-
-        if not os.path.exists(modelFolderPath):
-          os.makedirs(modelFolderPath)
-        
-        filename = os.path.join(modelFolderPath, filename)
-        torch.save(self.state_dict(), filename)
+    filename = os.path.join(modelFolderPath, filename)
+    torch.save(self.state_dict(), filename)
 
 
 class QTrainer:
