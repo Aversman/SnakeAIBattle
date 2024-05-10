@@ -1,4 +1,6 @@
 /__pycache__
 /.venv
 /test.py
+/models/model1_*
+/models/model2_*
 /models/model1_old*

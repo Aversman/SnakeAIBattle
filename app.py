@@ -1,11 +1,12 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO, send, emit
 from time import sleep
-
 import torch
 
 from Agent import Agent
-from Model import LinearQNetModel, CNNQNetModel
+from Model import LinearQNetModel, LinearQNetModel2
+
+import Graph
 
 # $ flask --app app.py --debug run
 
@@ -18,18 +19,19 @@ app.config['SECRET_KEY'] = 'b57558e3-2a61-44fc-b338-f3d1febf2a56'
 gameIterationDelay = 30
 
 # Net
-""" model1 = LinearQNetModel(35, 28, 3)
-model2 = LinearQNetModel(35, 28, 3) """
+model1 = LinearQNetModel(35, 28, 3)
+model2 = LinearQNetModel2(15, 256, 3)
 
-model1 = CNNQNetModel(3)
-model2 = CNNQNetModel(3)
-
-#model1.load_state_dict(torch.load("models/model_cnn.pth"))
-#model2.load_state_dict(torch.load("models/model_cnn.pth"))
+model1.load_state_dict(torch.load("models/model1.pth"))
+model2.load_state_dict(torch.load("models/model2.pth"))
 
 # Agents
-agent1 = Agent(model1, 0.5)
-agent2 = Agent(model2, 0.5)
+agent1 = Agent(model1, 0)
+agent2 = Agent(model2, 0)
+
+# For stats
+agent1_scores = []
+agent2_scores = []
 
 @app.route("/")
 def home():
@@ -71,6 +73,15 @@ def game_reward_handler(response):
       agent2.record = score['snake2']
       agent2.model.save()
     
+    agent1_scores.append(score['snake1'])
+    agent2_scores.append(score['snake2'])
+
+    if len(agent1_scores) == 100:
+      Graph.createGraph(agent1_scores, agent2_scores)
+    if len(agent1_scores) == 1000:
+      Graph.createGraph(agent1_scores, agent2_scores)
+      
+
     print('Game', agent1.nGames)
     print('[Agent1]', 'Score', score['snake1'], 'Record', agent1.record)
     print('[Agent2]', 'Score', score['snake2'], 'Record', agent2.record)

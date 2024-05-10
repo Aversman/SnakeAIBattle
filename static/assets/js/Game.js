@@ -242,8 +242,7 @@ class Game {
     // счетчик бесполезных ходов
     this.gameFreeIteration = 0
     this.isGameOver = 0
-    this.modelAI = 2
-    this.foodSpawnCount = 6
+    this.foodSpawnCount = 3
     this.foodMaxCount = 200
     this.foodCurCount = this.foodMaxCount
     this.arena = new Arena()
@@ -353,8 +352,8 @@ class Game {
     this._updateScreen()
 
     // for debug
-    console.log(gameReward)
-    console.log(this.gameFreeIteration)
+    /* console.log(gameReward)
+    console.log(this.gameFreeIteration) */
     return gameReward
   }
   /*
@@ -497,57 +496,58 @@ class Game {
     return result
   }
 
-  _classifyObjectByCoords(forPlayer, x, y) {
-    const snake1   = (forPlayer === 1) ? this.snake1 : this.snake2
-    const snake2   = (forPlayer === 1) ? this.snake2 : this.snake1
-    // [Яблоко, Хвост (свой или чужой), Стена]
-    // Пустота - 0, Голова - 1, Хвост - 2, Чужой хвост - 3, Яблоко - 4, Стена - 5
+  _getFoodPosition(forPlayer, radiusBlocks=19) {
+    const snake   = (forPlayer === 1) ? this.snake1 : this.snake2
+    // left, right, top, bottom
+    const result = [0, 0, 0, 0]
+    let optimFoodIdx = 0
+    let minFoodDistance = Math.sqrt(Math.pow(snake.snakeHeadX - this.food[0].foodX, 2) + Math.pow(snake.snakeHeadY - this.food[0].foodY, 2))
+    let isFinded = false
     for (let i = 0; i < this.food.length; i++) {
-      if (x === this.food[i].foodX & y === this.food[i].foodY) {
-        return 4/5
+      const curFood = this.food[i]
+      if (!((Math.abs((curFood.foodX - snake.snakeHeadX) / this.arena.objectsWeight) < radiusBlocks) & (Math.abs((curFood.foodY - snake.snakeHeadY) / this.arena.objectsWeight) < radiusBlocks))) {continue;}
+      const curFoodDistance = Math.sqrt(Math.pow(snake.snakeHeadX - this.food[i].foodX, 2) + Math.pow(snake.snakeHeadY - this.food[i].foodY, 2))
+      if (curFoodDistance < minFoodDistance) {
+        optimFoodIdx = i
+        minFoodDistance = curFoodDistance
+        isFinded = true
       }
     }
-    for (let i = 0; i < snake1.snakeTail.length; i++) {
-      if (x === snake1.snakeTail[i][0] & y === snake1.snakeTail[i][1]) {
-        if (i == 0)
-          return 1/5
-        else
-          return 2/5
-      }
+    if (isFinded === false) return result
+    const foodItem = this.food[optimFoodIdx]
+    if (foodItem.foodX < snake.snakeHeadX) {
+      result[0] = 1
+    }else if (foodItem.foodX > snake.snakeHeadX) {
+      result[1] = 1
     }
-    for (let i = 0; i < snake2.snakeTail.length; i++) {
-      if (x === snake2.snakeTail[i][0] & y === snake2.snakeTail[i][1]) {
-        return 3/5
-      }
-    }
-    if (!(x >= 0 & x < this.arena.arenaWidth & y >= 0 & y < this.arena.arenaHeight)) {
-      return 5/5
-    }
-    return 0
-  }
-  _searchByArea(forPlayer, squareSideLength=19) {
-    // result - матрица в виде упорядоченного вектора (массива)
-    const result = []
-    const snake1   = (forPlayer === 1) ? this.snake1 : this.snake2
-    let curX = snake1.snakeHeadX - (((squareSideLength - 1) / 2) * this.arena.objectsWeight)
-    let curY = snake1.snakeHeadY - (((squareSideLength - 1) / 2) * this.arena.objectsWeight)
-    for (let i = 0; i < squareSideLength; i++) {
-      //const areaRow = []
-      for (let j = 0; j < squareSideLength; j++) {
-        const pointObject = this._classifyObjectByCoords(forPlayer, curX, curY)
-        //areaRow.push(pointObject)
-        result.push(pointObject)
-        this.arena.foodRender('rgba(0,0,0,.2)', curX, curY)
-        curX += this.arena.objectsWeight
-      }
-      //result.push(areaRow)
-      
-      curY += this.arena.objectsWeight
-      curX -= (this.arena.objectsWeight * squareSideLength)
+    if (foodItem.foodY < snake.snakeHeadY) {
+      result[2] = 1
+    }else if (foodItem.foodY > snake.snakeHeadY) {
+      result[3] = 1
     }
     return result
   }
-  // Проверяет вокруг головы змейки все препятствия и возвращает массив опасных шагов
+
+  _getRivalPosition(forPlayer, radiusBlocks=19) {
+    const snake1  = (forPlayer === 1) ? this.snake1 : this.snake2
+    const snake2  = (forPlayer === 1) ? this.snake2 : this.snake1
+    // left, right, top, bottom
+    const result = [0, 0, 0, 0]
+    for (let i = 0; i < snake2.snakeTail.length; i++) {
+      if (!((Math.abs((snake2.snakeTail[i][0] - snake1.snakeHeadX) / this.arena.objectsWeight) < radiusBlocks) & (Math.abs((snake2.snakeTail[i][1] - snake1.snakeHeadY) / this.arena.objectsWeight) < radiusBlocks))) {continue;}
+      if (snake2.snakeTail[i][0] < snake1.snakeHeadX) {
+        result[0] = 1
+      }else if (snake2.snakeTail[i][0] > snake1.snakeHeadX) {
+        result[1] = 1
+      }
+      if (snake2.snakeTail[i][1] < snake1.snakeHeadY) {
+        result[2] = 1
+      }else if (snake2.snakeTail[i][1] > snake1.snakeHeadY) {
+        result[3] = 1
+      }
+    }
+    return result
+  }
   // Возвращает массив вида: [Продолжить направление, Слева, Справа]
   _findDangerDirections(forPlayer) {
     const result  = [0, 0, 0]
@@ -708,37 +708,47 @@ class Game {
     }
     return result
   }
+
+  _getSnakeDirection(forPlayer) {
+    // left, right, top, bottom
+    const result = [0, 0, 0, 0]
+    const snake = (forPlayer === 1) ? this.snake1 : this.snake2
+    switch (snake.snakeDirection) {
+      case 'left':
+        result[0] = 1
+        break;
+      case 'top':
+        result[2] = 1
+        break;
+      case 'right':
+        result[1] = 1
+        break;
+      case 'bottom':
+        result[3] = 1
+        break;
+      default:
+        break;
+    }
+    return result
+  }
   getAgentsState() {
-    let snake1Data = null
-    let snake2Data = null
-    if (this.modelAI === 1) {
-      snake1Data = [
-        ...this._findDangerDirections(1),
-        ...this._findObject(1, 'topLeft'),
-        ...this._findObject(1, 'top'),
-        ...this._findObject(1, 'topRight'),
-        ...this._findObject(1, 'right'),
-        ...this._findObject(1, 'bottomRight'),
-        ...this._findObject(1, 'bottom'),
-        ...this._findObject(1, 'bottomLeft'),
-        ...this._findObject(1, 'left'),
-      ]
-      snake2Data = [
-        ...this._findDangerDirections(2),
-        ...this._findObject(2, 'topLeft'),
-        ...this._findObject(2, 'top'),
-        ...this._findObject(2, 'topRight'),
-        ...this._findObject(2, 'right'),
-        ...this._findObject(2, 'bottomRight'),
-        ...this._findObject(2, 'bottom'),
-        ...this._findObject(2, 'bottomLeft'),
-        ...this._findObject(2, 'left'),
-      ]
-    }
-    else {
-      snake1Data = this._searchByArea(1)
-      snake2Data = this._searchByArea(2)
-    }
+    const snake1Data = [
+      ...this._findDangerDirections(1),
+      ...this._findObject(1, 'topLeft'),
+      ...this._findObject(1, 'top'),
+      ...this._findObject(1, 'topRight'),
+      ...this._findObject(1, 'right'),
+      ...this._findObject(1, 'bottomRight'),
+      ...this._findObject(1, 'bottom'),
+      ...this._findObject(1, 'bottomLeft'),
+      ...this._findObject(1, 'left'),
+    ]
+    const snake2Data = [
+      ...this._findDangerDirections(2),
+      ...this._getSnakeDirection(2),
+      ...this._getFoodPosition(2),
+      ...this._getRivalPosition(2)
+    ]
     return {
       "snake1": snake1Data,
       "snake2": snake2Data

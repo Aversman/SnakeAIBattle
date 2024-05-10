@@ -30,40 +30,23 @@ class LinearQNetModel(nn.Module):
     torch.save(self.state_dict(), filename)
 
 # Model 2
-class CNNQNetModel(nn.Module):
-  def __init__(self, output_size):
+class LinearQNetModel2(nn.Module):
+  def __init__(self, inputSize, hiddenSize, outputSize):
     super().__init__()
-    self.conv1 = nn.Conv2d(1, 16, kernel_size=3, stride=1, padding=1)
-    self.bn1 = nn.BatchNorm2d(16)
-
-    self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1)
-    self.bn2 = nn.BatchNorm2d(32)
-
-    self.pool = nn.MaxPool2d(2)
-    self.flatten = nn.Flatten()
-
-    self.fc1 = nn.Linear(32*4*4, 40)
-    self.fc2 = nn.Linear(40, output_size)
-
-
+    self.linear1 = nn.Linear(inputSize, hiddenSize)
+    self.linear2 = nn.Linear(hiddenSize, outputSize)
+  
   def forward(self, x):
-    x = x.view(-1, 1, 19, 19)
-    x = F.relu(self.bn1(self.conv1(x)))
-    x = self.pool(x)
-    x = F.relu(self.bn2(self.conv2(x)))
-    x = self.pool(x)
-    x = self.flatten(x)
-    
-    x = F.relu(self.fc1(x))
-    x = self.fc2(x)
+    x = F.relu(self.linear1(x))
+    x = self.linear2(x)
     return x
-
-  def save(self, filename='model_cnn.pth'):
+  
+  def save(self, filename='model2.pth'):
     modelFolderPath = 'models'
-
+    
     if not os.path.exists(modelFolderPath):
       os.makedirs(modelFolderPath)
-        
+    
     filename = os.path.join(modelFolderPath, filename)
     torch.save(self.state_dict(), filename)
 
