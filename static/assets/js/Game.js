@@ -260,7 +260,7 @@ class Game {
       snakeTail: [
         [this.arena.objectsWeight * 20, this.arena.arenaHeight - (this.arena.objectsWeight * 14)],
         [this.arena.objectsWeight * 19, this.arena.arenaHeight - (this.arena.objectsWeight * 14)]
-    ],
+      ],
       snakeDirection: "right"
     })
     this.snake2 = new Snake({
@@ -272,7 +272,7 @@ class Game {
       snakeTail: [
         [this.arena.arenaWidth - (this.arena.objectsWeight * 20), (this.arena.objectsWeight * 14)],
         [this.arena.arenaWidth - (this.arena.objectsWeight * 19), (this.arena.objectsWeight * 14)]
-    ],
+      ],
       snakeDirection: "left"
     })
     this.foodCounterElem = document.querySelector('#game-toolbar-score-counter')
@@ -606,6 +606,15 @@ class Game {
           result[2] = 1
         }
       })
+      if (snake2.snakeHeadX === snake.snakeHeadX & snake2.snakeHeadY === snake.snakeHeadY - 2*this.arena.objectsWeight) {
+        result[0] = 1
+      }
+      if (snake2.snakeHeadX === snake.snakeHeadX - 2*this.arena.objectsWeight & snake2.snakeHeadY === snake.snakeHeadY) {
+        result[1] = 1
+      }
+      if (snake2.snakeHeadX === snake.snakeHeadX + 2*this.arena.objectsWeight & snake2.snakeHeadY === snake.snakeHeadY) {
+        result[2] = 1
+      }
     }
     if (snake.snakeDirection === 'bottom') {
       if (snake.snakeHeadY === this.arena.arenaHeight - this.arena.objectsWeight) {
@@ -639,6 +648,15 @@ class Game {
           result[2] = 1
         }
       })
+      if (snake2.snakeHeadX === snake.snakeHeadX & snake2.snakeHeadY === snake.snakeHeadY + 2*this.arena.objectsWeight) {
+        result[0] = 1
+      }
+      if (snake2.snakeHeadX === snake.snakeHeadX + 2*this.arena.objectsWeight & snake2.snakeHeadY === snake.snakeHeadY) {
+        result[1] = 1
+      }
+      if (snake2.snakeHeadX === snake.snakeHeadX - 2*this.arena.objectsWeight & snake2.snakeHeadY === snake.snakeHeadY) {
+        result[2] = 1
+      }
     }
     if (snake.snakeDirection === 'left') {
       if (snake.snakeHeadX === 0) {
@@ -672,6 +690,15 @@ class Game {
           result[2] = 1
         }
       })
+      if (snake2.snakeHeadX === snake.snakeHeadX - 2*this.arena.objectsWeight & snake2.snakeHeadY === snake.snakeHeadY) {
+        result[0] = 1
+      }
+      if (snake2.snakeHeadX === snake.snakeHeadX & snake2.snakeHeadY === snake.snakeHeadY + 2*this.arena.objectsWeight) {
+        result[1] = 1
+      }
+      if (snake2.snakeHeadX === snake.snakeHeadX & snake2.snakeHeadY === snake.snakeHeadY - 2*this.arena.objectsWeight) {
+        result[2] = 1
+      }
     }
     if (snake.snakeDirection === 'right') {
       if (snake.snakeHeadX === this.arena.arenaWidth - this.arena.objectsWeight) {
@@ -705,6 +732,15 @@ class Game {
           result[2] = 1
         }
       })
+      if (snake2.snakeHeadX === snake.snakeHeadX + 2*this.arena.objectsWeight & snake2.snakeHeadY === snake.snakeHeadY) {
+        result[0] = 1
+      }
+      if (snake2.snakeHeadX === snake.snakeHeadX & snake2.snakeHeadY === snake.snakeHeadY - 2*this.arena.objectsWeight) {
+        result[1] = 1
+      }
+      if (snake2.snakeHeadX === snake.snakeHeadX & snake2.snakeHeadY === snake.snakeHeadY + 2*this.arena.objectsWeight) {
+        result[2] = 1
+      }
     }
     return result
   }

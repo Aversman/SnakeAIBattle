@@ -3,4 +3,4 @@ Flask==2.3.3
 Flask-SocketIO==5.3.6
 matplotlib==3.8.2
 torch==2.2.1
-pandas=2.2.2
+pandas==2.2.2

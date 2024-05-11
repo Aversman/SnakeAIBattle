@@ -18,12 +18,12 @@ app.config['SECRET_KEY'] = 'b57558e3-2a61-44fc-b338-f3d1febf2a56'
 # ms
 gameIterationDelay = 30
 
-# Net
+# Net Trained
 model1 = LinearQNetModel(35, 28, 3)
 model2 = LinearQNetModel2(15, 256, 3)
 
-model1.load_state_dict(torch.load("models/model1.pth"))
-model2.load_state_dict(torch.load("models/model2.pth"))
+model1.load_state_dict(torch.load("models/model1-35_28-final.pth"))
+model2.load_state_dict(torch.load("models/model2-15_256-final.pth"))
 
 # Agents
 agent1 = Agent(model1, 0)
@@ -78,8 +78,8 @@ def game_reward_handler(response):
 
     if len(agent1_scores) == 100:
       Graph.createGraph(agent1_scores, agent2_scores)
-    if len(agent1_scores) == 1000:
-      Graph.createGraph(agent1_scores, agent2_scores)
+      print("Agent1 scores: ", agent1_scores)
+      print("Agent2 scores: ", agent2_scores)
       
 
     print('Game', agent1.nGames)
